@@ -23,6 +23,7 @@
   h1 .beanie{color:var(--red)}
   .sub{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#bcd3d8;margin-top:4px}
   .rightblock{display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+  .todaybox{background:var(--mustard);color:var(--ink);font-weight:700;font-size:12px;letter-spacing:.5px;padding:5px 12px;border-radius:8px;text-transform:uppercase;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.2)}
   .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;letter-spacing:1px;text-transform:uppercase}
   .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -74,7 +75,9 @@
   .ph.cur{background:var(--mustard);color:var(--ink);border-color:var(--mustard);font-weight:700}
   .ph.click{cursor:pointer} .ph.click:hover{outline:1px solid var(--teal)}
   .track{position:relative;flex:0 0 auto;
-    background-image:repeating-linear-gradient(to right,transparent 0,transparent calc(var(--mw) - 1px),var(--line) calc(var(--mw) - 1px),var(--line) var(--mw));}
+    background-image:
+      repeating-linear-gradient(to right,transparent 0,transparent calc(var(--mw) - 1px),var(--line) calc(var(--mw) - 1px),var(--line) var(--mw)),
+      repeating-linear-gradient(to right,transparent 0,transparent calc(var(--mw)/4.345 - 1px),rgba(18,48,63,.06) calc(var(--mw)/4.345 - 1px),rgba(18,48,63,.06) calc(var(--mw)/4.345));}
   .bar{position:absolute;height:22px;top:50%;transform:translateY(-50%);border-radius:5px;display:flex;align-items:center;
        padding:0 8px;color:#fff;font-size:11px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.18);overflow:hidden;white-space:nowrap;min-width:6px}
   .bar .fill{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.28);border-right:1px solid rgba(255,255,255,.5)}
@@ -85,7 +88,8 @@
   .axis{display:flex;border-bottom:2px solid var(--line);position:sticky;top:0;z-index:4;background:var(--paper)}
   .axis .corner{position:sticky;left:0;z-index:5;width:250px;min-width:250px;background:var(--ink);color:var(--cream);
                 border-right:2px solid var(--line);display:flex;align-items:center;padding:0 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase}
-  .axis .months{position:relative;flex:0 0 auto;height:38px}
+  .axis .months{position:relative;flex:0 0 auto;height:38px;
+    background-image:repeating-linear-gradient(to right,transparent 0,transparent calc(var(--mw)/4.345 - 1px),rgba(18,48,63,.05) calc(var(--mw)/4.345 - 1px),rgba(18,48,63,.05) calc(var(--mw)/4.345));}
   .mo{position:absolute;top:0;bottom:0;font-size:10px;color:var(--ink2);padding:4px 5px;border-left:1px solid var(--line);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden}
   .mo.jan{border-left:2px solid var(--teal-deep);font-weight:700;color:var(--ink)}
   #dpanel{background:var(--paper);border-top:2px solid var(--line);padding:14px}
@@ -112,6 +116,7 @@
         <div class="sub" id="subtitle">loading&hellip;</div>
       </div>
       <div class="rightblock">
+        <div id="todaybox" class="todaybox">Today</div>
         <div class="controls">
           <span class="status" id="status"></span>
           <button class="btn editonly" id="addBtn">+ Project</button>
@@ -632,6 +637,8 @@ function toggleEdit(){
 function init(){
   document.getElementById('subtitle').innerHTML =
     'Updated ' + DATA.generated + '  &middot;  ' + DATA.projects.length + ' projects  &middot;  horizon +' + HORIZON + ' mo';
+  document.getElementById('todaybox').textContent =
+    'Today: ' + new Date().toLocaleDateString('en', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
   if(PUBLIC){
     ['editBtn','addBtn','dlBtn','saveBtn'].forEach(id=>{ const e=document.getElementById(id); if(e) e.remove(); });
   } else {
