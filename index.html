@@ -442,7 +442,7 @@ function drawGantt(){
   (DATA.milestones||[]).forEach((m,i)=>{
     const md=d(m.date); if(!md) return;
     const v=el('div','vline mile'); v.style.left=x(md)+'px'; v.appendChild(el('div','mdiam'));
-    const tg=el('div','tag', m.date.slice(5)+' '+m.label); tg.style.top=(14+(i%2)*20)+'px'; v.appendChild(tg);
+    const tg=el('div','tag', m.date.slice(5)+' '+m.label); tg.style.top=(13+(i%3)*17)+'px'; v.appendChild(tg);
     overlay.appendChild(v);
   });
   inner.appendChild(overlay);
