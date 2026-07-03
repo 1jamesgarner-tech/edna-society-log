@@ -75,6 +75,7 @@
   .ph.done{background:var(--green);color:#fff;border-color:var(--green)}
   .ph.cur{background:var(--mustard);color:var(--ink);border-color:var(--mustard);font-weight:700}
   .ph.click{cursor:pointer} .ph.click:hover{outline:1px solid var(--teal)}
+  .phadd{font-size:8px;padding:1px 3px;border:1px dashed var(--teal);border-radius:3px;background:#fff;color:var(--teal-deep);max-width:140px;cursor:pointer}
   .track{position:relative;flex:0 0 auto;
     background-image:
       repeating-linear-gradient(to right,transparent 0,transparent calc(var(--mw) - 1px),var(--line) calc(var(--mw) - 1px),var(--line) var(--mw)),
@@ -186,6 +187,8 @@ const DATA = {
                        }
                    ],
     "eDNA_phase_sequence":  [
+                                "Project planning",
+                                "Field-work planning",
                                 "Field work",
                                 "Filtration",
                                 "Extraction",
@@ -396,7 +399,7 @@ const HORIZON = DATA.horizon_months || 12;
 
 const SEQ = DATA.eDNA_phase_sequence || [];
 const PHASESETS = {
-  'Lab Data Pipeline': ['Field work','Filtration','Extraction','Lab submission','Data analysis'],
+  'Lab Data Pipeline': ['Project planning','Field-work planning','Field work','Filtration','Extraction','Lab submission','Data analysis'],
   'Modeling': ['Data analysis','Results finalizing','Manuscript drafting','Co-author review','Journal submission','Published'],
   'Writing & Reporting': ['Data analysis','Results finalizing','Manuscript drafting','Co-author review','Journal submission','Published']
 };
@@ -421,7 +424,19 @@ function cyclePhase(p,idx){
   const ph=p.phases[idx]; ph.status = cyc[(cyc.indexOf(ph.status)+1)%3];
   pinField(p,'phases'); drawGantt();
 }
-const CATS = ['Project Planning','Field Work Planning','Field Work','Writing & Reporting','Lab Data Pipeline','Modeling','Automation & Web','Knowledge Base','Bishir (Business)'];
+function addPhase(p,name){
+  materialize(p);
+  if(!p.phases.some(x=>x.name===name)){
+    // insert in canonical order if known, else append
+    const order = (DATA.eDNA_phase_sequence||[]);
+    const rank = n => { const i=order.indexOf(n); return i<0?999:i; };
+    p.phases.push({name, status:'current'});
+    p.phases.sort((a,b)=> rank(a.name)-rank(b.name));
+  }
+  pinField(p,'phases'); drawGantt();
+}
+function removePhase(p,idx){ materialize(p); p.phases.splice(idx,1); pinField(p,'phases'); drawGantt(); }
+const CATS = ['Writing & Reporting','Lab Data Pipeline','Modeling','Automation & Web','Knowledge Base','Bishir (Business)'];
 const RANK = {high:0,medium:1,low:2};
 function sortKey(p){ return (p.sort!=null) ? p.sort : 100 + (RANK[p.priority]!=null?RANK[p.priority]:9); }
 function groupSorted(list){ return list.slice().sort((a,b)=> sortKey(a)-sortKey(b)); }
@@ -520,10 +535,20 @@ function drawGantt(){
         er.append(cs,up,dn,tg,adl); lab.appendChild(er);
       }
       const phs = phasesFor(p);
-      if(phs){
+      if(phs || editing){
         const pc = el('div','phases');
-        phs.forEach((ph,pi)=>{ const sp=el('span','ph '+ph.cls+(editing?' click':''), ph.name);
-          if(editing) sp.onclick=()=>cyclePhase(p,pi); pc.appendChild(sp); });
+        (phs||[]).forEach((ph,pi)=>{
+          const sp=el('span','ph '+ph.cls+(editing?' click':''), ph.name);
+          if(editing){ sp.title='click: cycle status  |  shift+click: remove'; sp.onclick=(e)=>{ if(e.shiftKey) removePhase(p,pi); else cyclePhase(p,pi); }; }
+          pc.appendChild(sp);
+        });
+        if(editing){
+          const present=new Set((phasesFor(p)||[]).map(x=>x.name));
+          const sel=el('select','phadd editonly'); sel.appendChild(new Option('+ phase',''));
+          (SEQ||[]).forEach(n=>{ if(!present.has(n)) sel.appendChild(new Option(n,n)); });
+          sel.onchange=()=>{ if(sel.value) addPhase(p, sel.value); };
+          pc.appendChild(sel);
+        }
         lab.appendChild(pc);
       }
       if(editing){
