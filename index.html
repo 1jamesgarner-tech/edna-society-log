@@ -57,6 +57,14 @@
   .catsel{font-size:10px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;background:#fff;max-width:160px}
   .ord{background:var(--teal-deep);color:#fff;border:none;border-radius:4px;width:24px;height:20px;cursor:pointer;font-size:10px;line-height:1}
   .ord:disabled{opacity:.35;cursor:default}
+  .tgt{font-size:10px;padding:2px 4px;border:1px solid var(--line);border-radius:4px}
+  .waiting{position:absolute;top:50%;transform:translateY(-50%);max-width:300px;font-size:10px;background:var(--mustard);color:var(--ink);
+           padding:2px 8px;border-radius:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 2px rgba(0,0,0,.2);z-index:1}
+  .waitin{position:absolute;top:50%;transform:translateY(-50%);width:250px;font-size:10px;padding:2px 6px;border:1px solid var(--mustard);border-radius:6px;background:#fffbe9;z-index:1}
+  .waitbar{background:#fff4d6;border:2px solid var(--mustard);border-radius:10px;margin-top:14px;padding:10px 14px;font-size:12px}
+  .waitbar h4{margin:0 0 6px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink)}
+  .waitbar ul{margin:0;padding-left:18px} .waitbar li{margin:3px 0;line-height:1.35}
+  .waitbar b{color:var(--teal-deep)}
   .phases{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
   .ph{font-size:8px;letter-spacing:.3px;text-transform:uppercase;padding:2px 4px;border-radius:3px;border:1px solid var(--line);color:var(--ink2);background:#fff}
   .ph.done{background:var(--green);color:#fff;border-color:var(--green)}
@@ -120,6 +128,7 @@
     </div>
   </header>
 
+  <div id="waitbar" class="waitbar" style="display:none"></div>
   <div class="card">
     <div class="gantt" id="gantt"></div>
     <div id="dpanel" class="editonly" style="display:none"></div>
@@ -474,7 +483,9 @@ function drawGantt(){
         const idx = ordered.indexOf(p);
         const up = el('button','ord','&#9650;'); up.title='move up'; up.disabled = idx<=0; up.onclick=()=>moveProj(p,-1);
         const dn = el('button','ord','&#9660;'); dn.title='move down'; dn.disabled = idx>=ordered.length-1; dn.onclick=()=>moveProj(p,1);
-        er.append(cs,up,dn); lab.appendChild(er);
+        const tg = el('input','tgt'); tg.type='date'; tg.value=p.target||''; tg.title='deadline (this project bar end)';
+        tg.onchange=()=>{ p.target = tg.value||null; pinField(p,'target'); drawGantt(); };
+        er.append(cs,up,dn,tg); lab.appendChild(er);
       }
       const phs = phasesFor(p);
       if(phs){
@@ -496,11 +507,23 @@ function drawGantt(){
       const fill=el('div','fill'); fill.style.width=(p.percent||0)+'%'; bar.appendChild(fill);
       bar.appendChild(el('span',null,(p.percent||0)+'%'));
       bar.title = p.name + ' - ' + (p.next_action||'');
-      track.appendChild(bar); row.appendChild(track);
+      track.appendChild(bar);
+      // "waiting on you" status at the leading edge of the bar (~today)
+      if(editing){
+        const wi = el('input','waitin editonly'); wi.value=p.waiting_on||''; wi.placeholder='waiting on you...';
+        wi.style.left=Math.min(x(e)+6, chartW-256)+'px';
+        wi.onchange=()=>{ p.waiting_on = wi.value.trim()||null; pinField(p,'waiting_on'); buildWaiting(); };
+        track.appendChild(wi);
+      } else if(p.waiting_on){
+        const wl = el('div','waiting'); wl.style.left=(x(e)+6)+'px'; wl.textContent=p.waiting_on; wl.title=p.waiting_on;
+        track.appendChild(wl);
+      }
+      row.appendChild(track);
       inner.appendChild(row);
     });
   });
   g.appendChild(inner);
+  buildWaiting();
 }
 
 function buildDeadlines(){
@@ -519,6 +542,17 @@ function buildDeadlines(){
   const add=el('button','btn','+ Add deadline');
   add.onclick=()=>{ DATA.milestones.push({label:'New deadline',date:isoToday(),project:null,importance:'high'}); buildDeadlines(); drawGantt(); };
   dp.appendChild(add);
+}
+
+function buildWaiting(){
+  const wb=document.getElementById('waitbar');
+  const items = DATA.projects.filter(p=> p.tracking!==false && p.waiting_on);
+  if(PUBLIC || !items.length){ wb.style.display='none'; wb.innerHTML=''; return; }
+  wb.style.display='block'; wb.innerHTML='';
+  wb.appendChild(el('h4',null,'&#9203; Waiting on you ('+items.length+')'));
+  const ul=el('ul');
+  items.forEach(p=>{ const li=el('li'); const b=el('b'); b.textContent=p.name+': '; const s=el('span'); s.textContent=p.waiting_on; li.append(b,s); ul.appendChild(li); });
+  wb.appendChild(ul);
 }
 
 function setStatus(t){ document.getElementById('status').textContent = t||''; }
