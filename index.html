@@ -661,9 +661,10 @@ async function save(){
   }catch(e){ if(e && e.name==='AbortError'){ setStatus('Save cancelled'); } else { downloadJSON(text); } }
 }
 function downloadJSON(text){
+  const fn = 'projects.edit.' + Date.now() + '.json';   // unique per save so nothing collides/overwrites
   const b=new Blob([text],{type:'application/json'}); const a=document.createElement('a');
-  a.href=URL.createObjectURL(b); a.download='projects.json'; a.click();
-  setStatus('Downloaded projects.json to your Downloads â€” click Run on the "Project Tracker â€” Manual" routine to review & apply your edits.');
+  a.href=URL.createObjectURL(b); a.download=fn; a.click();
+  setStatus('Saved '+fn+' to Downloads â€” run the manual tracker (/tracker-manual). Every save is kept and merged, so no edit is lost between runs.');
 }
 
 function addProject(){
