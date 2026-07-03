@@ -53,6 +53,10 @@
   .rowlabel .meta{font-size:10px;color:var(--ink2);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
   .trkwrap{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink2);display:flex;align-items:center;gap:4px;margin-bottom:3px}
   .pct{width:60px;font-size:11px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;margin-top:5px}
+  .editrow{display:flex;gap:5px;align-items:center;margin-top:5px;flex-wrap:wrap}
+  .catsel{font-size:10px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;background:#fff;max-width:160px}
+  .ord{background:var(--teal-deep);color:#fff;border:none;border-radius:4px;width:24px;height:20px;cursor:pointer;font-size:10px;line-height:1}
+  .ord:disabled{opacity:.35;cursor:default}
   .phases{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
   .ph{font-size:8px;letter-spacing:.3px;text-transform:uppercase;padding:2px 4px;border-radius:3px;border:1px solid var(--line);color:var(--ink2);background:#fff}
   .ph.done{background:var(--green);color:#fff;border-color:var(--green)}
@@ -168,7 +172,7 @@ const DATA = {
                          "category":  "Writing \u0026 Reporting",
                          "status":  "active",
                          "priority":  "high",
-                         "percent":  60,
+                         "percent":  85,
                          "start":  "2026-01-01",
                          "target":  "2026-07-30"
                      },
@@ -208,18 +212,8 @@ const DATA = {
                          "category":  "Automation \u0026 Web",
                          "status":  "active",
                          "priority":  "medium",
-                         "percent":  90,
+                         "percent":  98,
                          "start":  "2026-04-01",
-                         "target":  null
-                     },
-                     {
-                         "id":  "drought-prediction",
-                         "name":  "Drought Prediction Pipeline (USDM exceedance)",
-                         "category":  "Modeling",
-                         "status":  "active",
-                         "priority":  "high",
-                         "percent":  70,
-                         "start":  "2026-03-15",
                          "target":  null
                      },
                      {
@@ -238,19 +232,72 @@ const DATA = {
                          "category":  "Modeling",
                          "status":  "review",
                          "priority":  "medium",
-                         "percent":  80,
+                         "percent":  45,
                          "start":  "2026-04-10",
-                         "target":  null
+                         "target":  null,
+                         "phases":  [
+                                        {
+                                            "name":  "Data analysis",
+                                            "status":  "done"
+                                        },
+                                        {
+                                            "name":  "Results finalizing",
+                                            "status":  "done"
+                                        },
+                                        {
+                                            "name":  "Manuscript drafting",
+                                            "status":  "current"
+                                        },
+                                        {
+                                            "name":  "Co-author review",
+                                            "status":  "upcoming"
+                                        },
+                                        {
+                                            "name":  "Journal submission",
+                                            "status":  "upcoming"
+                                        },
+                                        {
+                                            "name":  "Published",
+                                            "status":  "upcoming"
+                                        }
+                                    ],
+                         "tracking":  true
                      },
                      {
                          "id":  "stat-tempdyn",
-                         "name":  "STAT-TempDyn01 — Temporal Dynamics Exploration",
+                         "name":  "qPCR Temporal Dynamics Exploration",
                          "category":  "Modeling",
                          "status":  "review",
                          "priority":  "low",
-                         "percent":  85,
+                         "percent":  10,
                          "start":  "2026-06-01",
-                         "target":  null
+                         "target":  null,
+                         "phases":  [
+                                        {
+                                            "name":  "Data analysis",
+                                            "status":  "done"
+                                        },
+                                        {
+                                            "name":  "Results finalizing",
+                                            "status":  "done"
+                                        },
+                                        {
+                                            "name":  "Manuscript drafting",
+                                            "status":  "upcoming"
+                                        },
+                                        {
+                                            "name":  "Co-author review",
+                                            "status":  "upcoming"
+                                        },
+                                        {
+                                            "name":  "Journal submission",
+                                            "status":  "upcoming"
+                                        },
+                                        {
+                                            "name":  "Published",
+                                            "status":  "upcoming"
+                                        }
+                                    ]
                      },
                      {
                          "id":  "edna-kb",
@@ -260,6 +307,36 @@ const DATA = {
                          "priority":  "low",
                          "percent":  60,
                          "start":  "2026-01-15",
+                         "target":  null
+                     },
+                     {
+                         "id":  "bishir-taxafloc",
+                         "name":  "TaxaFloc Field-Deployable Biosurveillance Platform",
+                         "category":  "Bishir (Business)",
+                         "status":  "active",
+                         "priority":  "high",
+                         "percent":  15,
+                         "start":  "2026-01-01",
+                         "target":  null
+                     },
+                     {
+                         "id":  "bishir-ecocash-analytics",
+                         "name":  "EcoCASH \u0026 eDNA Analytics Products",
+                         "category":  "Bishir (Business)",
+                         "status":  "active",
+                         "priority":  "medium",
+                         "percent":  20,
+                         "start":  "2026-01-01",
+                         "target":  null
+                     },
+                     {
+                         "id":  "bishir-formation-funding",
+                         "name":  "Bishir Company Formation, IP \u0026 SBIR/STTR Funding",
+                         "category":  "Bishir (Business)",
+                         "status":  "active",
+                         "priority":  "medium",
+                         "percent":  25,
+                         "start":  "2026-04-01",
                          "target":  null
                      }
                  ]
@@ -312,6 +389,15 @@ function cyclePhase(p,idx){
   const ph=p.phases[idx]; ph.status = cyc[(cyc.indexOf(ph.status)+1)%3];
   pinField(p,'phases'); drawGantt();
 }
+const CATS = ['Writing & Reporting','Lab Data Pipeline','Modeling','Automation & Web','Knowledge Base','Bishir (Business)'];
+const RANK = {high:0,medium:1,low:2};
+function sortKey(p){ return (p.sort!=null) ? p.sort : 100 + (RANK[p.priority]!=null?RANK[p.priority]:9); }
+function groupSorted(list){ return list.slice().sort((a,b)=> sortKey(a)-sortKey(b)); }
+function moveProj(p,dir){
+  const grp = groupSorted(DATA.projects.filter(x=>x.category===p.category));
+  const i=grp.indexOf(p), j=i+dir; if(j<0||j>=grp.length) return;
+  const t=grp[i]; grp[i]=grp[j]; grp[j]=t; grp.forEach((x,k)=> x.sort=k); drawGantt();
+}
 function barEnd(p){
   const s=d(p.start), tgt=d(p.target), open = p.status!=='done';
   let e = tgt ? tgt : (open ? T : s);
@@ -352,17 +438,14 @@ function drawGantt(){
   });
   inner.appendChild(overlay);
 
-  const order = ['Writing & Reporting','Lab Data Pipeline','Modeling','Automation & Web','Knowledge Base','Bishir (Business)'];
   const groups = {};
   DATA.projects.forEach(p=>{ (groups[p.category]=groups[p.category]||[]).push(p); });
-  const cats = order.filter(c=>groups[c]).concat(Object.keys(groups).filter(c=>!order.includes(c)));
-  const rank = {high:0,medium:1,low:2};
+  const cats = CATS.filter(c=>groups[c]).concat(Object.keys(groups).filter(c=>!CATS.includes(c)));
 
   cats.forEach(c=>{
-    const vis = groups[c].filter(p=> editing || p.tracking!==false);
+    const vis = groupSorted(groups[c].filter(p=> editing || p.tracking!==false));
     if(!vis.length) return;
     const gh = el('div','grouphdr', c); gh.style.width=(LABEL_W+chartW)+'px'; inner.appendChild(gh);
-    vis.sort((a,b)=> (rank[a.priority]??9)-(rank[b.priority]??9));
     vis.forEach(p=>{
       const row = el('div','row'+(p.tracking===false?' untracked':''));
       const lab = el('div','rowlabel');
@@ -380,6 +463,19 @@ function drawGantt(){
       let meta = (p.status||'').toUpperCase() + ' &middot; ' + (p.percent||0) + '%';
       if(p.blocked_on) meta += " &middot; <span class='blk'>BLOCKED</span>";
       lab.appendChild(el('div','meta', meta));
+      if(editing){
+        const er = el('div','editrow editonly');
+        const cs = el('select','catsel'); cs.title='project bin';
+        CATS.forEach(cc=> cs.appendChild(new Option(cc,cc)));
+        if(!CATS.includes(p.category)) cs.appendChild(new Option(p.category,p.category));
+        cs.value = p.category;
+        cs.onchange = ()=>{ p.category = cs.value; pinField(p,'category'); delete p.sort; drawGantt(); };
+        const ordered = groupSorted(DATA.projects.filter(x=>x.category===p.category));
+        const idx = ordered.indexOf(p);
+        const up = el('button','ord','&#9650;'); up.title='move up'; up.disabled = idx<=0; up.onclick=()=>moveProj(p,-1);
+        const dn = el('button','ord','&#9660;'); dn.title='move down'; dn.disabled = idx>=ordered.length-1; dn.onclick=()=>moveProj(p,1);
+        er.append(cs,up,dn); lab.appendChild(er);
+      }
       const phs = phasesFor(p);
       if(phs){
         const pc = el('div','phases');
