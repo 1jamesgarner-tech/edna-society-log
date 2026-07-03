@@ -437,14 +437,14 @@ async function save(){
           types:[{description:'JSON', accept:{'application/json':['.json']}}] });
       }
       const w = await fileHandle.createWritable(); await w.write(text); await w.close();
-      setStatus('Saved to projects.json âœ“  (run publish or wait for the next auto-run to push)');
+      setStatus('Saved to projects.json âœ“  â€” click Run on the "Project Tracker â€” Manual" routine to review & apply.');
     } else { downloadJSON(text); }
   }catch(e){ if(e && e.name==='AbortError'){ setStatus('Save cancelled'); } else { downloadJSON(text); } }
 }
 function downloadJSON(text){
   const b=new Blob([text],{type:'application/json'}); const a=document.createElement('a');
   a.href=URL.createObjectURL(b); a.download='projects.json'; a.click();
-  setStatus('Downloaded projects.json â€” drop it into your project-tracker folder to apply');
+  setStatus('Downloaded projects.json to your Downloads â€” click Run on the "Project Tracker â€” Manual" routine to review & apply your edits.');
 }
 
 function addProject(){
