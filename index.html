@@ -1,0 +1,490 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The eDNA Society Project Log</title>
+<style>
+  :root{
+    --cream:#f2e7c9; --paper:#fbf6e6; --ink:#12303f; --ink2:#3a5a67;
+    --teal:#1b9aaa; --teal-deep:#0e6ba8; --red:#d1372a; --mustard:#e9b44c;
+    --coral:#ef8354; --green:#4c9f70; --muted:#9fb0a9; --line:#d9cfae;
+    --row:#fffdf5; --mw:92px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--cream);color:var(--ink);
+    font-family:Futura,'Century Gothic','Trebuchet MS','Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1500px;margin:0 auto;padding:18px}
+  header{background:var(--ink);color:var(--cream);border-radius:10px;overflow:hidden;border:3px solid var(--ink)}
+  .hbar{height:8px;background:linear-gradient(90deg,var(--red) 0 33%,var(--cream) 33% 66%,var(--teal) 66% 100%)}
+  .hmain{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 22px;gap:16px;flex-wrap:wrap}
+  h1{margin:0;font-size:28px;letter-spacing:4px;text-transform:uppercase;font-weight:700}
+  h1 .beanie{color:var(--red)}
+  .sub{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#bcd3d8;margin-top:4px}
+  .rightblock{display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+  .btn{background:var(--teal);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;
+       letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-weight:700}
+  .btn.alt{background:var(--mustard);color:var(--ink)} .btn.ghost{background:transparent;color:var(--cream);border:1px solid var(--cream)}
+  .btn.on{background:var(--red)}
+  .status{font-size:10px;color:#bcd3d8;letter-spacing:1px;max-width:260px}
+  body:not(.editing) .editonly{display:none !important}
+  .card{background:var(--paper);border:2px solid var(--line);border-radius:10px;margin-top:16px;overflow:hidden}
+  .gantt{overflow-x:auto;position:relative}
+  .inner{position:relative}
+  .grid-overlay{position:absolute;top:0;bottom:0;pointer-events:none;z-index:2}
+  .vline{position:absolute;top:0;bottom:0;width:0}
+  .today{border-left:2px solid var(--mustard)} .today .tag{background:var(--mustard);color:var(--ink)}
+  .mile{border-left:2px dashed var(--red)} .mile .tag{background:var(--red);color:#fff}
+  .tag{position:absolute;top:2px;left:3px;font-size:9px;letter-spacing:.5px;text-transform:uppercase;padding:2px 5px;
+       border-radius:4px;white-space:nowrap;font-weight:700;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+  .mdiam{position:absolute;width:9px;height:9px;background:var(--red);transform:rotate(45deg);left:-5px}
+  .row{display:flex;align-items:stretch;border-top:1px solid var(--line);min-height:52px}
+  .row:hover .track{background:rgba(27,154,170,.05)}
+  .row.untracked{opacity:.42}
+  .rowlabel{position:sticky;left:0;z-index:3;background:var(--row);width:250px;min-width:250px;padding:8px 12px;
+            border-right:2px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+  .rowlabel .nm{font-size:13px;font-weight:700;line-height:1.15}
+  .nm[contenteditable="true"]{outline:1px dashed var(--teal);border-radius:4px;padding:1px 4px}
+  .rowlabel .meta{font-size:10px;color:var(--ink2);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+  .trkwrap{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink2);display:flex;align-items:center;gap:4px;margin-bottom:3px}
+  .pct{width:60px;font-size:11px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;margin-top:5px}
+  .phases{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+  .ph{font-size:8px;letter-spacing:.3px;text-transform:uppercase;padding:2px 4px;border-radius:3px;border:1px solid var(--line);color:var(--ink2);background:#fff}
+  .ph.done{background:var(--green);color:#fff;border-color:var(--green)}
+  .ph.cur{background:var(--mustard);color:var(--ink);border-color:var(--mustard);font-weight:700}
+  .ph.click{cursor:pointer} .ph.click:hover{outline:1px solid var(--teal)}
+  .track{position:relative;flex:0 0 auto;
+    background-image:repeating-linear-gradient(to right,transparent 0,transparent calc(var(--mw) - 1px),var(--line) calc(var(--mw) - 1px),var(--line) var(--mw));}
+  .bar{position:absolute;height:22px;top:50%;transform:translateY(-50%);border-radius:5px;display:flex;align-items:center;
+       padding:0 8px;color:#fff;font-size:11px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.18);overflow:hidden;white-space:nowrap;min-width:6px}
+  .bar .fill{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.28);border-right:1px solid rgba(255,255,255,.5)}
+  .bar span{position:relative;z-index:1;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+  .st-active{background:var(--teal)} .st-review{background:var(--teal-deep)}
+  .st-blocked{background:var(--coral)} .st-paused{background:var(--muted)} .st-done{background:var(--green)}
+  .grouphdr{background:var(--ink);color:var(--cream);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:6px 12px;position:sticky;left:0;font-weight:700}
+  .axis{display:flex;border-bottom:2px solid var(--line);position:sticky;top:0;z-index:4;background:var(--paper)}
+  .axis .corner{position:sticky;left:0;z-index:5;width:250px;min-width:250px;background:var(--ink);color:var(--cream);
+                border-right:2px solid var(--line);display:flex;align-items:center;padding:0 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase}
+  .axis .months{position:relative;flex:0 0 auto;height:38px}
+  .mo{position:absolute;top:0;bottom:0;font-size:10px;color:var(--ink2);padding:4px 5px;border-left:1px solid var(--line);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden}
+  .mo.jan{border-left:2px solid var(--teal-deep);font-weight:700;color:var(--ink)}
+  #dpanel{background:var(--paper);border-top:2px solid var(--line);padding:14px}
+  #dpanel h3{margin:0 0 10px;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+  .drow{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+  .drow input,.drow select{font-size:11px;padding:3px 5px;border:1px solid var(--line);border-radius:4px;background:#fff}
+  .drow input.dl{width:150px} .drow input.lbl{flex:1;min-width:160px}
+  .xbtn{background:var(--red);color:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:700}
+  footer{font-size:11px;color:var(--ink2);text-align:center;padding:14px;letter-spacing:.5px}
+  .blk{color:var(--red);font-weight:700}
+  @media (max-width:760px){
+    .wrap{padding:8px}.hmain{flex-direction:column;align-items:flex-start;padding:12px 14px}
+    h1{font-size:19px;letter-spacing:2px}.sub{font-size:10px}.legend{gap:8px;font-size:10px}.rightblock{align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="hbar"></div>
+    <div class="hmain">
+      <div>
+        <h1>The <span class="beanie">eDNA</span> Society Project Log</h1>
+        <div class="sub" id="subtitle">loading&hellip;</div>
+      </div>
+      <div class="rightblock">
+        <div class="controls">
+          <span class="status" id="status"></span>
+          <button class="btn editonly" id="addBtn">+ Project</button>
+          <button class="btn alt editonly" id="dlBtn">Deadlines</button>
+          <button class="btn editonly" id="saveBtn">Save</button>
+          <button class="btn ghost" id="editBtn">Edit</button>
+        </div>
+        <div class="legend">
+          <span><i class="sw st-active"></i>Active</span>
+          <span><i class="sw st-review"></i>Review</span>
+          <span><i class="sw st-blocked"></i>Blocked</span>
+          <span><i class="sw st-done"></i>Done</span>
+          <span><i class="sw" style="background:var(--mustard)"></i>Today</span>
+          <span><i class="sw" style="background:var(--red)"></i>Deadline</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="gantt" id="gantt"></div>
+    <div id="dpanel" class="editonly" style="display:none"></div>
+  </div>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const DATA = {
+    "generated":  "2026-07-03",
+    "owner":  "James Garner",
+    "status_legend":  {
+                          "active":  "Being worked on now",
+                          "review":  "Draft/results done, awaiting review or sign-off",
+                          "blocked":  "Waiting on an external input",
+                          "paused":  "Intentionally on hold",
+                          "done":  "Complete"
+                      },
+    "horizon_months":  12,
+    "milestones":  [
+                       {
+                           "label":  "Monument ms re-submission (Environmental DNA)",
+                           "date":  "2026-07-30",
+                           "project":  "river-herring-edna-manuscript",
+                           "importance":  "high"
+                       },
+                       {
+                           "label":  "SNS full draft done",
+                           "date":  "2026-09-28",
+                           "project":  null,
+                           "importance":  "high"
+                       }
+                   ],
+    "eDNA_phase_sequence":  [
+                                "Field work",
+                                "Filtration",
+                                "Extraction",
+                                "Lab submission",
+                                "Data analysis",
+                                "Results finalizing",
+                                "Manuscript drafting",
+                                "Co-author review",
+                                "Journal submission",
+                                "Published"
+                            ],
+    "projects":  [
+                     {
+                         "id":  "river-herring-edna-manuscript",
+                         "name":  "River Herring eDNA Scaling Manuscript (Environmental DNA revision)",
+                         "category":  "Writing \u0026 Reporting",
+                         "status":  "active",
+                         "priority":  "high",
+                         "percent":  60,
+                         "start":  "2026-01-01",
+                         "target":  "2026-07-30"
+                     },
+                     {
+                         "id":  "vinica-brook-report",
+                         "name":  "Vinica Brook Interim Report",
+                         "category":  "Writing \u0026 Reporting",
+                         "status":  "review",
+                         "priority":  "high",
+                         "percent":  95,
+                         "start":  "2026-05-01",
+                         "target":  null
+                     },
+                     {
+                         "id":  "metabarcoding-rmt",
+                         "name":  "Metabarcoding RMT Manuscript (Ch. 4 partner)",
+                         "category":  "Writing \u0026 Reporting",
+                         "status":  "active",
+                         "priority":  "high",
+                         "percent":  60,
+                         "start":  "2026-05-15",
+                         "target":  null
+                     },
+                     {
+                         "id":  "edith-gis-autobuilder",
+                         "name":  "eDITH-GIS Auto-Builder (Sunday routine)",
+                         "category":  "Automation \u0026 Web",
+                         "status":  "active",
+                         "priority":  "medium",
+                         "percent":  70,
+                         "start":  "2026-06-25",
+                         "target":  null
+                     },
+                     {
+                         "id":  "aquifer-siting-map",
+                         "name":  "Aquifer Siting Map \u0026 Alerts",
+                         "category":  "Automation \u0026 Web",
+                         "status":  "active",
+                         "priority":  "medium",
+                         "percent":  90,
+                         "start":  "2026-04-01",
+                         "target":  null
+                     },
+                     {
+                         "id":  "drought-prediction",
+                         "name":  "Drought Prediction Pipeline (USDM exceedance)",
+                         "category":  "Modeling",
+                         "status":  "active",
+                         "priority":  "high",
+                         "percent":  70,
+                         "start":  "2026-03-15",
+                         "target":  null
+                     },
+                     {
+                         "id":  "qpcr-combined",
+                         "name":  "qPCR Combined Pipeline (all rounds)",
+                         "category":  "Lab Data Pipeline",
+                         "status":  "active",
+                         "priority":  "high",
+                         "percent":  75,
+                         "start":  "2026-02-01",
+                         "target":  null
+                     },
+                     {
+                         "id":  "edna-occupancy-sturgeon",
+                         "name":  "eDNA Occupancy — Sturgeon (2024 qPCR)",
+                         "category":  "Modeling",
+                         "status":  "review",
+                         "priority":  "medium",
+                         "percent":  80,
+                         "start":  "2026-04-10",
+                         "target":  null
+                     },
+                     {
+                         "id":  "stat-tempdyn",
+                         "name":  "STAT-TempDyn01 — Temporal Dynamics Exploration",
+                         "category":  "Modeling",
+                         "status":  "review",
+                         "priority":  "low",
+                         "percent":  85,
+                         "start":  "2026-06-01",
+                         "target":  null
+                     },
+                     {
+                         "id":  "edna-kb",
+                         "name":  "eDNA Knowledge Base (curation \u0026 audit)",
+                         "category":  "Knowledge Base",
+                         "status":  "active",
+                         "priority":  "low",
+                         "percent":  60,
+                         "start":  "2026-01-15",
+                         "target":  null
+                     }
+                 ]
+};
+const PUBLIC = true;
+const MW = 92, LABEL_W = 250, DAY = 86400000;
+let editing = false, fileHandle = null;
+
+function d(s){ return s ? new Date(s + 'T00:00:00') : null; }
+function todayD(){ const t=new Date(); return new Date(t.getFullYear(),t.getMonth(),t.getDate()); }
+function addMonths(dt,n){ return new Date(dt.getFullYear(), dt.getMonth()+n, dt.getDate()); }
+function monthsBetween(a,b){ return (b.getFullYear()-a.getFullYear())*12 + (b.getMonth()-a.getMonth()); }
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40) || ('proj-'+Math.floor(Math.random()*9999)); }
+function isoToday(){ return new Date().toISOString().slice(0,10); }
+function pinField(p,f){ p.pinned = p.pinned||[]; if(!p.pinned.includes(f)) p.pinned.push(f); }
+function el(tag,cls,html){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
+
+const T = todayD();
+function timeStart(){
+  const starts = DATA.projects.map(p=>d(p.start)).filter(Boolean);
+  let s = starts.length ? new Date(Math.min.apply(null, starts.map(x=>x.getTime()))) : new Date(T.getFullYear(),0,1);
+  return new Date(s.getFullYear(), s.getMonth(), 1);
+}
+const HORIZON = DATA.horizon_months || 12;
+
+const SEQ = DATA.eDNA_phase_sequence || [];
+const PHASESETS = {
+  'Lab Data Pipeline': ['Field work','Filtration','Extraction','Lab submission','Data analysis'],
+  'Modeling': ['Data analysis','Results finalizing','Manuscript drafting','Co-author review','Journal submission','Published'],
+  'Writing & Reporting': ['Data analysis','Results finalizing','Manuscript drafting','Co-author review','Journal submission','Published']
+};
+function phasesFor(p){
+  if(Array.isArray(p.phases) && p.phases.length){
+    return p.phases.map(ph=>({name:ph.name, cls: ph.status==='done'?'done':(ph.status==='current'?'cur':'')}));
+  }
+  const set = PHASESETS[p.category];
+  if(!set) return null;
+  const doneCount = Math.round((p.percent||0)/100*set.length);
+  return set.map((nm,i)=>({name:nm, cls: i<doneCount?'done':(i===doneCount?'cur':'')}));
+}
+function materialize(p){
+  if(!Array.isArray(p.phases) || !p.phases.length){
+    const cur = phasesFor(p) || [];
+    p.phases = cur.map(x=>({name:x.name, status: x.cls==='done'?'done':(x.cls==='cur'?'current':'upcoming')}));
+  }
+}
+function cyclePhase(p,idx){
+  materialize(p);
+  const cyc=['upcoming','current','done'];
+  const ph=p.phases[idx]; ph.status = cyc[(cyc.indexOf(ph.status)+1)%3];
+  pinField(p,'phases'); drawGantt();
+}
+function barEnd(p){
+  const s=d(p.start), tgt=d(p.target), open = p.status!=='done';
+  let e = tgt ? tgt : (open ? T : s);
+  if(open && e < T) e = T;
+  if(e <= s) e = new Date(s.getTime()+7*DAY);
+  return e;
+}
+
+function drawGantt(){
+  const start = timeStart();
+  const end = addMonths(new Date(T.getFullYear(), T.getMonth(), 1), HORIZON+1);
+  const totalMonths = monthsBetween(start, end);
+  const chartW = totalMonths * MW;
+  const span = end.getTime() - start.getTime();
+  const x = (dt)=> ((dt.getTime()-start.getTime())/span) * chartW;
+
+  const g = document.getElementById('gantt'); g.innerHTML='';
+
+  const axis = el('div','axis');
+  axis.appendChild(el('div','corner','Project'));
+  const months = el('div','months'); months.style.width = chartW+'px';
+  for(let i=0;i<totalMonths;i++){
+    const m = addMonths(start,i);
+    const mo = el('div','mo'+(m.getMonth()===0?' jan':''),
+      m.toLocaleString('en',{month:'short'}) + (m.getMonth()===0? " '"+String(m.getFullYear()).slice(2):''));
+    mo.style.left=(i*MW)+'px'; mo.style.width=MW+'px'; months.appendChild(mo);
+  }
+  axis.appendChild(months); g.appendChild(axis);
+
+  const inner = el('div','inner');
+  const overlay = el('div','grid-overlay'); overlay.style.left=LABEL_W+'px'; overlay.style.width=chartW+'px';
+  const tl = el('div','vline today'); tl.style.left=x(T)+'px'; tl.appendChild(el('div','tag','Today')); overlay.appendChild(tl);
+  (DATA.milestones||[]).forEach((m,i)=>{
+    const md=d(m.date); if(!md) return;
+    const v=el('div','vline mile'); v.style.left=x(md)+'px'; v.appendChild(el('div','mdiam'));
+    const tg=el('div','tag', m.date.slice(5)+' '+m.label); tg.style.top=(14+(i%2)*20)+'px'; v.appendChild(tg);
+    overlay.appendChild(v);
+  });
+  inner.appendChild(overlay);
+
+  const order = ['Writing & Reporting','Lab Data Pipeline','Modeling','Automation & Web','Knowledge Base','Bishir (Business)'];
+  const groups = {};
+  DATA.projects.forEach(p=>{ (groups[p.category]=groups[p.category]||[]).push(p); });
+  const cats = order.filter(c=>groups[c]).concat(Object.keys(groups).filter(c=>!order.includes(c)));
+  const rank = {high:0,medium:1,low:2};
+
+  cats.forEach(c=>{
+    const vis = groups[c].filter(p=> editing || p.tracking!==false);
+    if(!vis.length) return;
+    const gh = el('div','grouphdr', c); gh.style.width=(LABEL_W+chartW)+'px'; inner.appendChild(gh);
+    vis.sort((a,b)=> (rank[a.priority]??9)-(rank[b.priority]??9));
+    vis.forEach(p=>{
+      const row = el('div','row'+(p.tracking===false?' untracked':''));
+      const lab = el('div','rowlabel');
+      if(editing){
+        const tw = el('label','trkwrap editonly');
+        const cb = el('input'); cb.type='checkbox'; cb.checked = p.tracking!==false;
+        cb.onchange = ()=>{ p.tracking = cb.checked; drawGantt(); };
+        tw.append(cb, document.createTextNode(cb.checked?'tracking':'stopped')); lab.appendChild(tw);
+      }
+      const nm = el('div','nm', p.name);
+      if(editing){ nm.contentEditable='true';
+        nm.onblur=()=>{ const t=nm.textContent.trim(); if(t && t!==p.name){ p.name=t; pinField(p,'name'); } };
+      }
+      lab.appendChild(nm);
+      let meta = (p.status||'').toUpperCase() + ' &middot; ' + (p.percent||0) + '%';
+      if(p.blocked_on) meta += " &middot; <span class='blk'>BLOCKED</span>";
+      lab.appendChild(el('div','meta', meta));
+      const phs = phasesFor(p);
+      if(phs){
+        const pc = el('div','phases');
+        phs.forEach((ph,pi)=>{ const sp=el('span','ph '+ph.cls+(editing?' click':''), ph.name);
+          if(editing) sp.onclick=()=>cyclePhase(p,pi); pc.appendChild(sp); });
+        lab.appendChild(pc);
+      }
+      if(editing){
+        const inp = el('input','pct editonly'); inp.type='number'; inp.min=0; inp.max=100; inp.value=p.percent||0; inp.title='percent complete';
+        inp.onchange = ()=>{ p.percent = Math.max(0,Math.min(100,parseInt(inp.value)||0)); pinField(p,'percent'); drawGantt(); };
+        lab.appendChild(inp);
+      }
+      row.appendChild(lab);
+      const track = el('div','track'); track.style.width=chartW+'px';
+      const s=d(p.start), e=barEnd(p);
+      const bar = el('div','bar st-'+(p.status||'active'));
+      bar.style.left=x(s)+'px'; bar.style.width=Math.max(6,(x(e)-x(s)))+'px';
+      const fill=el('div','fill'); fill.style.width=(p.percent||0)+'%'; bar.appendChild(fill);
+      bar.appendChild(el('span',null,(p.percent||0)+'%'));
+      bar.title = p.name + ' - ' + (p.next_action||'');
+      track.appendChild(bar); row.appendChild(track);
+      inner.appendChild(row);
+    });
+  });
+  g.appendChild(inner);
+}
+
+function buildDeadlines(){
+  const dp=document.getElementById('dpanel'); dp.innerHTML='';
+  dp.appendChild(el('h3',null,'Deadlines / milestones &mdash; move one by editing its date'));
+  (DATA.milestones=DATA.milestones||[]).forEach((m,idx)=>{
+    const r=el('div','drow');
+    const dt=el('input'); dt.type='date'; dt.className='dl'; dt.value=m.date; dt.onchange=()=>{ m.date=dt.value; drawGantt(); };
+    const lb=el('input'); lb.className='lbl'; lb.value=m.label; lb.onchange=()=>{ m.label=lb.value; drawGantt(); };
+    const sel=el('select'); sel.appendChild(new Option('(no project)',''));
+    DATA.projects.forEach(p=> sel.appendChild(new Option(p.name, p.id)));
+    sel.value=m.project||''; sel.onchange=()=>{ m.project=sel.value||null; };
+    const xb=el('button','xbtn','Ã—'); xb.title='remove'; xb.onclick=()=>{ DATA.milestones.splice(idx,1); buildDeadlines(); drawGantt(); };
+    r.append(dt,lb,sel,xb); dp.appendChild(r);
+  });
+  const add=el('button','btn','+ Add deadline');
+  add.onclick=()=>{ DATA.milestones.push({label:'New deadline',date:isoToday(),project:null,importance:'high'}); buildDeadlines(); drawGantt(); };
+  dp.appendChild(add);
+}
+
+function setStatus(t){ document.getElementById('status').textContent = t||''; }
+
+async function save(){
+  DATA.generated = isoToday();
+  const text = JSON.stringify(DATA, null, 2);
+  try{
+    if(window.showSaveFilePicker){
+      if(!fileHandle){
+        fileHandle = await window.showSaveFilePicker({ suggestedName:'projects.json',
+          types:[{description:'JSON', accept:{'application/json':['.json']}}] });
+      }
+      const w = await fileHandle.createWritable(); await w.write(text); await w.close();
+      setStatus('Saved to projects.json âœ“  (run publish or wait for the next auto-run to push)');
+    } else { downloadJSON(text); }
+  }catch(e){ if(e && e.name==='AbortError'){ setStatus('Save cancelled'); } else { downloadJSON(text); } }
+}
+function downloadJSON(text){
+  const b=new Blob([text],{type:'application/json'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(b); a.download='projects.json'; a.click();
+  setStatus('Downloaded projects.json â€” drop it into your project-tracker folder to apply');
+}
+
+function addProject(){
+  const name = prompt('New project name?'); if(!name) return;
+  const category = prompt('Category? (Writing & Reporting / Lab Data Pipeline / Modeling / Automation & Web / Knowledge Base / Bishir (Business))','Modeling') || 'Modeling';
+  DATA.projects.push({ id:slug(name), name, category, status:'active', priority:'medium', percent:0,
+    start:isoToday(), target:null, repo:null, next_action:'', blocked_on:null,
+    evidence:['manual:added in dashboard'], notes:'', tracking:true, pinned:['name','status','percent'] });
+  drawGantt();
+}
+
+function toggleEdit(){
+  editing = !editing;
+  document.body.classList.toggle('editing', editing);
+  document.getElementById('editBtn').textContent = editing ? 'Done' : 'Edit';
+  document.getElementById('editBtn').classList.toggle('on', editing);
+  if(!editing) document.getElementById('dpanel').style.display='none';
+  setStatus(editing ? 'Edit mode: change titles, %, phase bubbles, tracking; Deadlines to add/move dates; Save when done.' : '');
+  drawGantt();
+}
+
+function init(){
+  document.getElementById('subtitle').innerHTML =
+    'Updated ' + DATA.generated + '  &middot;  ' + DATA.projects.length + ' projects  &middot;  horizon +' + HORIZON + ' mo';
+  if(PUBLIC){
+    ['editBtn','addBtn','dlBtn','saveBtn'].forEach(id=>{ const e=document.getElementById(id); if(e) e.remove(); });
+  } else {
+    document.getElementById('editBtn').onclick = toggleEdit;
+    document.getElementById('saveBtn').onclick = save;
+    document.getElementById('addBtn').onclick = addProject;
+    document.getElementById('dlBtn').onclick = ()=>{
+      const dp=document.getElementById('dpanel');
+      if(dp.style.display==='none'){ buildDeadlines(); dp.style.display='block'; } else { dp.style.display='none'; }
+    };
+  }
+  document.getElementById('foot').innerHTML =
+    'eDNA Ecology Club &middot; Life Aquatic &middot; auto-updates twice weekly &middot; edit + Save writes projects.json (direct save in Chrome/Edge) &middot; bookmark this file';
+  drawGantt();
+}
+init();
+</script>
+</body>
+</html>
