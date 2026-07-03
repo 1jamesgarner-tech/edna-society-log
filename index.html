@@ -100,6 +100,19 @@
   .xbtn{background:var(--red);color:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:700}
   footer{font-size:11px;color:var(--ink2);text-align:center;padding:14px;letter-spacing:.5px}
   .blk{color:var(--red);font-weight:700}
+  /* collapsible waiting panel + compact density */
+  .waitbar h4{cursor:pointer;user-select:none}
+  .waitbar h4::before{content:'\25BE ';font-size:10px}
+  .waitbar.collapsed h4::before{content:'\25B8 '}
+  .waitbar.collapsed ul,.waitbar.collapsed .wrow,.waitbar.collapsed .btn{display:none}
+  body.compact .row{min-height:27px}
+  body.compact .rowlabel{padding:2px 10px}
+  body.compact .rowlabel .nm{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:226px}
+  body.compact .rowlabel .meta{font-size:9px;margin-top:1px}
+  body.compact .phases{display:none}
+  body.compact .bar{height:15px;font-size:10px}
+  body.compact .grouphdr{padding:3px 10px;font-size:10px}
+  body.compact .waiting{font-size:9px;padding:1px 6px}
   @media (max-width:760px){
     .wrap{padding:8px}.hmain{flex-direction:column;align-items:flex-start;padding:12px 14px}
     h1{font-size:19px;letter-spacing:2px}.sub{font-size:10px}.legend{gap:8px;font-size:10px}.rightblock{align-items:flex-start}
@@ -119,6 +132,7 @@
         <div id="todaybox" class="todaybox">Today</div>
         <div class="controls">
           <span class="status" id="status"></span>
+          <button class="btn" id="compactBtn">Compact</button>
           <button class="btn editonly" id="addBtn">+ Project</button>
           <button class="btn alt editonly" id="dlBtn">Deadlines</button>
           <button class="btn editonly" id="saveBtn">Save</button>
@@ -472,7 +486,7 @@ function drawGantt(){
         cb.onchange = ()=>{ p.tracking = cb.checked; drawGantt(); };
         tw.append(cb, document.createTextNode(cb.checked?'tracking':'stopped')); lab.appendChild(tw);
       }
-      const nm = el('div','nm', p.name);
+      const nm = el('div','nm', p.name); nm.title=p.name;
       if(editing){ nm.contentEditable='true';
         nm.onblur=()=>{ const t=nm.textContent.trim(); if(t && t!==p.name){ p.name=t; pinField(p,'name'); } };
       }
@@ -561,7 +575,9 @@ function buildWaiting(){
   const total = projItems.length + extra.length;
   if(!editing && total===0){ wb.style.display='none'; wb.innerHTML=''; return; }
   wb.style.display='block'; wb.innerHTML='';
-  wb.appendChild(el('h4',null,'&#9203; Waiting on you ('+total+')'));
+  const wh=el('h4',null,'&#9203; Waiting on you ('+total+')');
+  wh.onclick=()=>{ const c=wb.classList.toggle('collapsed'); try{ localStorage.setItem('tracker-waitcollapsed', c?'1':'0'); }catch(e){} };
+  wb.appendChild(wh);
 
   if(!editing){
     const ul=el('ul');
@@ -634,11 +650,22 @@ function toggleEdit(){
   drawGantt();
 }
 
+function toggleCompact(){
+  const on = document.body.classList.toggle('compact');
+  document.getElementById('compactBtn').classList.toggle('on', on);
+  try{ localStorage.setItem('tracker-compact', on?'1':'0'); }catch(e){}
+}
+
 function init(){
   document.getElementById('subtitle').innerHTML =
     'Updated ' + DATA.generated + '  &middot;  ' + DATA.projects.length + ' projects  &middot;  horizon +' + HORIZON + ' mo';
   document.getElementById('todaybox').textContent =
     'Today: ' + new Date().toLocaleDateString('en', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  document.getElementById('compactBtn').onclick = toggleCompact;
+  try{
+    if(localStorage.getItem('tracker-compact')==='1'){ document.body.classList.add('compact'); document.getElementById('compactBtn').classList.add('on'); }
+    if(localStorage.getItem('tracker-waitcollapsed')==='1'){ document.getElementById('waitbar').classList.add('collapsed'); }
+  }catch(e){}
   if(PUBLIC){
     ['editBtn','addBtn','dlBtn','saveBtn'].forEach(id=>{ const e=document.getElementById(id); if(e) e.remove(); });
   } else {
