@@ -65,6 +65,9 @@
   .waitbar h4{margin:0 0 6px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink)}
   .waitbar ul{margin:0;padding-left:18px} .waitbar li{margin:3px 0;line-height:1.35}
   .waitbar b{color:var(--teal-deep)}
+  .wrow{display:flex;gap:6px;align-items:center;margin:4px 0;flex-wrap:wrap}
+  .wname{font-size:11px;color:var(--teal-deep);font-weight:700;min-width:150px}
+  .winp{flex:1;min-width:220px;font-size:11px;padding:3px 6px;border:1px solid var(--line);border-radius:4px}
   .phases{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
   .ph{font-size:8px;letter-spacing:.3px;text-transform:uppercase;padding:2px 4px;border-radius:3px;border:1px solid var(--line);color:var(--ink2);background:#fff}
   .ph.done{background:var(--green);color:#fff;border-color:var(--green)}
@@ -546,13 +549,43 @@ function buildDeadlines(){
 
 function buildWaiting(){
   const wb=document.getElementById('waitbar');
-  const items = DATA.projects.filter(p=> p.tracking!==false && p.waiting_on);
-  if(PUBLIC || !items.length){ wb.style.display='none'; wb.innerHTML=''; return; }
+  if(PUBLIC){ wb.style.display='none'; wb.innerHTML=''; return; }
+  const projItems = DATA.projects.filter(p=> p.tracking!==false && p.waiting_on);
+  DATA.waiting_extra = DATA.waiting_extra || [];
+  const extra = DATA.waiting_extra;
+  const total = projItems.length + extra.length;
+  if(!editing && total===0){ wb.style.display='none'; wb.innerHTML=''; return; }
   wb.style.display='block'; wb.innerHTML='';
-  wb.appendChild(el('h4',null,'&#9203; Waiting on you ('+items.length+')'));
-  const ul=el('ul');
-  items.forEach(p=>{ const li=el('li'); const b=el('b'); b.textContent=p.name+': '; const s=el('span'); s.textContent=p.waiting_on; li.append(b,s); ul.appendChild(li); });
-  wb.appendChild(ul);
+  wb.appendChild(el('h4',null,'&#9203; Waiting on you ('+total+')'));
+
+  if(!editing){
+    const ul=el('ul');
+    projItems.forEach(p=>{ const li=el('li'); const b=el('b'); b.textContent=p.name+': '; const s=el('span'); s.textContent=p.waiting_on; li.append(b,s); ul.appendChild(li); });
+    extra.forEach(t=>{ const li=el('li'); li.textContent=t; ul.appendChild(li); });
+    wb.appendChild(ul);
+    return;
+  }
+
+  // EDIT mode: editable rows (edit / remove) + add
+  projItems.forEach(p=>{
+    const r=el('div','wrow');
+    const lb=el('span','wname'); lb.textContent=p.name+':';
+    const inp=el('input','winp'); inp.value=p.waiting_on;
+    inp.onchange=()=>{ p.waiting_on = inp.value.trim()||null; pinField(p,'waiting_on'); drawGantt(); };
+    const x=el('button','xbtn','Ã—'); x.title='clear this blocker'; x.onclick=()=>{ p.waiting_on=null; pinField(p,'waiting_on'); drawGantt(); };
+    r.append(lb,inp,x); wb.appendChild(r);
+  });
+  extra.forEach((t,idx)=>{
+    const r=el('div','wrow');
+    const lb=el('span','wname'); lb.textContent='(general):';
+    const inp=el('input','winp'); inp.value=t;
+    inp.onchange=()=>{ extra[idx]=inp.value; };
+    const x=el('button','xbtn','Ã—'); x.title='remove'; x.onclick=()=>{ extra.splice(idx,1); buildWaiting(); };
+    r.append(lb,inp,x); wb.appendChild(r);
+  });
+  const add=el('button','btn','+ Add item');
+  add.onclick=()=>{ extra.push('New waiting-on-you item'); buildWaiting(); };
+  wb.appendChild(add);
 }
 
 function setStatus(t){ document.getElementById('status').textContent = t||''; }
